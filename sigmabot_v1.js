@@ -10,33 +10,21 @@ function payoff(a, o) {
     return 0;
 }
 
-function swapHistory(history) {
-    const result = new Array(history.length);
-
-    for (let i = 0; i < history.length; i++) {
-        result[i] = {
-            you: history[i].opponent,
-            opponent: history[i].you
-        };
-    }
-    return result;
-}
-
 const MODELS = [
     {
         name: "alwaysC",
-
         move(h) {
             return C;
         }
     },
+
     {
         name: "alwaysD",
-
         move(h) {
             return D;
         }
     },
+
     {
         name: "TFT",
         move(h) {
@@ -44,6 +32,7 @@ const MODELS = [
             return h[h.length - 1].opponent;
         }
     },
+
     {
         name: "grudger",
         move(h) {
@@ -53,73 +42,9 @@ const MODELS = [
             return C;
         }
     },
+
     {
         name: "tit2",
-
-        move(h) {
-        const n = h.length;
-
-        if (
-            n >= 2 &&
-            h[n - 1].opponent === D &&
-            h[n - 2].opponent === D
-        ) {
-            return D;
-        }
-        return C;
-        }
-    },
-    {
-        name: "pavlov",
-
-        move(h) {
-            if (h.length === 0) return C;
-            const last = h[h.length - 1];
-
-            const opponentPayoff = payoff(last.you, last.opponent);
-            if (opponentPayoff === 2 || opponentPayoff === 3) {
-                return last.opponent;
-            }
-            return last.opponent === C ? D : C;
-        }
-    },
-    {
-        name: "detetive",
-
-        move(h) {
-            const n = h.length;
-
-            if (n ===0) return C;
-            if (n === 1) return D;
-            if (n === 2) return C;
-
-        if (
-            h[0].opponent === C &&
-            h[1].opponent === C &&
-            h[2].opponent === D
-        ) {
-            return C;
-        }
-        return D;
-        }
-    },
-    {
-        name: "suspiciousTFT",
-
-        move(h) {
-            if (h.length === 0) return D;
-            return h[h.length - 1].opponent;
-        }
-    },
-    {
-        name: "alternator",
-        move(h) {
-            return h.length % 2 === 0 ? C : D;
-        }
-    },
-    {
-        name: "generous2",
-
         move(h) {
             const n = h.length;
 
@@ -130,16 +55,88 @@ const MODELS = [
             ) {
                 return D;
             }
+
             return C;
         }
     },
+
+    {
+        name: "pavlov",
+        move(h) {
+            if (h.length === 0) return C;
+
+            const last = h[h.length - 1];
+
+            const opponentPayoff = payoff(
+                last.opponent,
+                last.you
+            );
+
+            if (opponentPayoff === 2 || opponentPayoff === 3) {
+                return last.opponent;
+            }
+
+            return last.opponent === C ? D : C;
+        }
+    },
+
+    {
+        name: "detective",
+        move(h) {
+            const n = h.length;
+
+            if (n === 0) return C;
+            if (n === 1) return D;
+            if (n === 2) return C;
+
+            if (
+                h[0].opponent === C &&
+                h[1].opponent === C &&
+                h[2].opponent === D
+            ) {
+                return C;
+            }
+
+            return D;
+        }
+    },
+
+    {
+        name: "suspiciousTFT",
+        move(h) {
+            if (h.length === 0) return D;
+            return h[h.length - 1].opponent;
+        }
+    },
+
+    {
+        name: "alternator",
+        move(h) {
+            return h.length % 2 === 0 ? C : D;
+        }
+    },
+
+    {
+        name: "generous2",
+        move(h) {
+            const n = h.length;
+
+            if (
+                n >= 2 &&
+                h[n - 1].opponent === D &&
+                h[n - 2].opponent === D
+            ) {
+                return D;
+            }
+
+            return C;
+        }
+    },
+
     {
         name: "antiTFT",
-
         move(h) {
-            if (h.length === 0) {
-                return D; 
-            }
+            if (h.length === 0) return D;
 
             return h[h.length - 1].opponent === C ? D : C;
         }
@@ -149,7 +146,7 @@ const MODELS = [
 function fingerprint(history) {
     const n = history.length;
     const start = Math.max(0, n - 28);
-    
+
     const results = new Array(MODELS.length);
 
     for (let m = 0; m < MODELS.length; m++) {
@@ -184,7 +181,6 @@ function fingerprint(history) {
     results.sort((a, b) => a.mistakes - b.mistakes);
 
     return results;
-            
 }
 
 function knownBestMove(name, history) {
@@ -198,7 +194,7 @@ function knownBestMove(name, history) {
         return D;
     }
 
-    if (name === "detetive") {
+    if (name === "detective") {
         return D;
     }
 
@@ -210,7 +206,10 @@ function knownBestMove(name, history) {
         return D;
     }
 
-    if (name === "TFT" || name === "suspiciousTFT") {
+    if (
+        name === "TFT" ||
+        name === "suspiciousTFT"
+    ) {
         return C;
     }
 
@@ -220,22 +219,35 @@ function knownBestMove(name, history) {
                 return D;
             }
         }
+
         return C;
     }
 
-    if (name === "tit2" || name === "generous2") {
-        if (n > 0 && history[n - 1].you === D) {
+    if (
+        name === "tit2" ||
+        name === "generous2"
+    ) {
+        if (
+            n > 0 &&
+            history[n - 1].you === D
+        ) {
             return C;
         }
+
         return D;
     }
 
     if (name === "pavlov") {
-        if (n > 0 && history[n - 1].opponent === D) {
+        if (
+            n > 0 &&
+            history[n - 1].opponent === D
+        ) {
             return D;
         }
+
         return C;
     }
+
     return null;
 }
 
@@ -243,11 +255,17 @@ function contextModel(history) {
     const MAX_CONTEXT = 3;
     const WINDOW = 80;
 
-    const start = Math.max(0, history.length - WINDOW);
+    const start = Math.max(
+        0,
+        history.length - WINDOW
+    );
 
     const h = history.slice(start);
 
-    const counts = Array.from({ length: MAX_CONTEXT + 1 }, () => new Map());
+    const counts = Array.from(
+        { length: MAX_CONTEXT + 1 },
+        () => new Map()
+    );
 
     function pairCode(you, opponent) {
         if (you === C && opponent === C) return 0;
@@ -257,15 +275,27 @@ function contextModel(history) {
     }
 
     for (let i = 0; i < h.length; i++) {
-        const maxK = Math.min(MAX_CONTEXT, i);
+        const maxK = Math.min(
+            MAX_CONTEXT,
+            i
+        );
 
         for (let k = 0; k <= maxK; k++) {
             let key = "";
-            for (let j = i - k; j < i; j++) {
-                key += pairCode(h[j].you, h[j].opponent);
+
+            for (
+                let j = i - k;
+                j < i;
+                j++
+            ) {
+                key += pairCode(
+                    h[j].you,
+                    h[j].opponent
+                );
             }
 
             let arr = counts[k].get(key);
+
             if (!arr) {
                 arr = [0, 0];
                 counts[k].set(key, arr);
@@ -283,12 +313,23 @@ function contextModel(history) {
         let numerator = 0;
         let denominator = 0;
 
-        const maxK = Math.min(MAX_CONTEXT, recentCodes.length);
+        const maxK = Math.min(
+            MAX_CONTEXT,
+            recentCodes.length
+        );
 
-        for (let k = maxK; k >= 0; k--) {
+        for (
+            let k = maxK;
+            k >= 0;
+            k--
+        ) {
             let key = "";
 
-            for (let j = recentCodes.length - k; j < recentCodes.length; j++) {
+            for (
+                let j = recentCodes.length - k;
+                j < recentCodes.length;
+                j++
+            ) {
                 key += recentCodes[j];
             }
 
@@ -304,11 +345,15 @@ function contextModel(history) {
                 continue;
             }
 
-            const p = (arr[0] + 1) / (total + 2);
+            const p =
+                (arr[0] + 1) /
+                (total + 2);
 
-            const weight = Math.pow(2, k) * (total / (total + 5));
+            const weight =
+                Math.pow(2, k) *
+                (total / (total + 5));
 
-            numerator += weight * p;
+            numerator += p * weight;
             denominator += weight;
         }
 
@@ -318,7 +363,7 @@ function contextModel(history) {
 
         return numerator / denominator;
     }
-    
+
     return {
         pairCode,
         predict
@@ -335,7 +380,10 @@ function fallbackMove(history) {
     let recentC = 0;
     let recentD = 0;
 
-    const begin = Math.max(0, n - 8);
+    const begin = Math.max(
+        0,
+        n - 8
+    );
 
     for (let i = begin; i < n; i++) {
         if (history[i].opponent === C) {
@@ -356,7 +404,10 @@ function fallbackMove(history) {
     let retaliation = 0;
     let retaliationTotal = 0;
 
-    for (let i = 0; i < n; i++) {
+    let recovery = 0;
+    let recoveryTotal = 0;
+
+    for (let i = 1; i < n; i++) {
         if (history[i - 1].you === D) {
             retaliationTotal++;
 
@@ -373,60 +424,112 @@ function fallbackMove(history) {
             }
         }
     }
-}
 
-if (retaliationTotal >= 3) {
-    const r = retaliation / retaliationTotal;
+    if (retaliationTotal >= 3) {
+        const r =
+            retaliation / retaliationTotal;
 
-    const recoveryRate = recoveryTotal > 0 ? recovery / recoveryTotal : 0;
+        const recoveryRate =
+            recoveryTotal > 0
+                ? recovery / recoveryTotal
+                : 0;
 
-    if (r >= 0.72 && recoveryRate > 0.62) {
+        if (
+            r >= 0.72 &&
+            recoveryRate > 0.62
+        ) {
+            return C;
+        }
+
+        if (r > 0.72) {
+            return D;
+        }
+    }
+
+    const model =
+        contextModel(history);
+
+    const recentCodes =
+        history
+            .slice(-3)
+            .map(x =>
+                model.pairCode(
+                    x.you,
+                    x.opponent
+                )
+            );
+
+    const pNow =
+        model.predict(recentCodes);
+
+    function evaluateAction(action) {
+        const currentExpected =
+            pNow * payoff(action, C) +
+            (1 - pNow) * payoff(action, D);
+
+        let futureExpected = 0;
+
+        const outcomes = [
+            [C, pNow],
+            [D, 1 - pNow]
+        ];
+
+        for (
+            const [opponentMove, probability]
+            of outcomes
+        ) {
+            const nextCodes =
+                recentCodes
+                    .concat([
+                        model.pairCode(
+                            action,
+                            opponentMove
+                        )
+                    ])
+                    .slice(-3);
+
+            const pNext =
+                model.predict(nextCodes);
+
+            const bestNext =
+                Math.max(
+                    2 * pNext,
+                    1 + 2 * pNext
+                );
+
+            futureExpected +=
+                probability * bestNext;
+        }
+
+        return (
+            currentExpected +
+            0.72 * futureExpected
+        );
+    }
+
+    const cooperateValue =
+        evaluateAction(C);
+
+    const defectValue =
+        evaluateAction(D);
+
+    if (
+        pNow > 0.73 &&
+        retaliationTotal >= 2 &&
+        retaliation / retaliationTotal > 0.6
+    ) {
         return C;
     }
 
-    if (r > 0.72) {
-        return D;
-    }
+    return defectValue >= cooperateValue
+        ? D
+        : C;
 }
-
-const model = contextModel(history);
-
-const recentCodes = history.slice(-3).map(x => model.pairCode(x.you, x.opponent));
-
-const pNow = model.predict(recentCodes);
-
-function evaluateAction(action) {
-    let currentExpected = pNow * payoff(action, C) + (1 - pNow) * payoff(action, D);
-
-    let futureExpected = 0;
-
-    const outcomes = [[C, pNow], [D, 1 - pNow]];
-
-    for (const [opponentMove, probability] of outcomes) {
-        const nextCodes= recentCodes.concat([model.pairCode(action, opponentMove)]).slice(-3);
-
-        const pNext = model.predict(nextCodes);
-
-        const bestNext = Math.max(2 * pNext, 1 + 2 * pNext);
-
-        futureExpected += probability * bestNext;
-    }
-
-    return (currentExpected + 0.72 * futureExpected);
-}
-
-const cooperateValue = evaluateAction(C);
-const defectValue = evaluateAction(D);
-
-if (pNow > 0.73 && retaliationTotal >= 2 && retaliation / retaliationTotal > 0.6) {
-    return C;
-}
-
-return defectValue >= cooperateValue ? D : C;
 
 export default function bot({ history }) {
     const n = history.length;
 
+    // Opening sequence: C, C, D, C
     if (n === 0) {
         return [C, null];
     }
@@ -443,34 +546,68 @@ export default function bot({ history }) {
         return [C, null];
     }
 
-    const fingerprints = fingerprint(history);
+    const fingerprints =
+        fingerprint(history);
 
-    const best = fingerprints[0];
+    const best =
+        fingerprints[0];
 
-    const second = fingerprints[1];
+    const second =
+        fingerprints[1];
 
-    if (best.mistakes <= 1 && (second.mistakes - best.mistakes >= 2 || best .mistakes === 0)) {
-        const bestMove = knownBestMove(best.name, history);
+    if (
+        best.mistakes <= 1 &&
+        (
+            second.mistakes -
+                best.mistakes >= 2 ||
+            best.mistakes === 0
+        )
+    ) {
+        const bestMove =
+            knownBestMove(
+                best.name,
+                history
+            );
 
-        if (move) {
-            return [move, null];
+        if (bestMove) {
+            return [bestMove, null];
         }
     }
 
     if (n >= 5) {
-        const a = history[n - 3];
-        const b = history[n - 2];
-        const c = history[n - 1];
+        const a =
+            history[n - 3];
 
-        if (a.you === D && a.opponent === C && b.you === C && b.opponent === D && c.you === C && c.opponent === D) {
+        const b =
+            history[n - 2];
+
+        const c =
+            history[n - 1];
+
+        if (
+            a.you === D &&
+            a.opponent === C &&
+            b.you === C &&
+            b.opponent === D &&
+            c.you === C &&
+            c.opponent === D
+        ) {
             return [D, null];
         }
 
-
-    if (a.you === C && a.opponent === D && b.you === D && b.opponent === D && c.opponent === C) {
-        return [C, null];
+        if (
+            a.you === C &&
+            a.opponent === D &&
+            b.you === D &&
+            b.opponent === D &&
+            c.opponent === C
+        ) {
+            return [C, null];
         }
     }
 
-    return [fallbackMove(history), null];
+    return [
+        fallbackMove(history),
+        null
+    ];
 }
